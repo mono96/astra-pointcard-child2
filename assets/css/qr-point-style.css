@@ -1,0 +1,170 @@
+/* QRコードポイント用スタイル */
+.qr-point-container {
+    margin: 20px 0;
+    padding: 15px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.qr-code-wrapper {
+    display: inline-block;
+    margin: 10px auto;
+    padding: 10px;
+    background: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.qr-instructions {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* QRコードスキャナー用スタイル */
+.qr-scanner-container {
+    margin: 20px 0;
+    padding: 20px;
+    background: #f5f5f5;
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+.camera-controls {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.control-button {
+    padding: 8px 15px;
+    margin: 0 5px;
+    background: #2271b1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.control-button:hover {
+    background: #135e96;
+}
+
+.point-form {
+    margin-top: 20px;
+    padding: 15px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.user-info-display {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.point-input-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.point-input-area label {
+    min-width: 120px;
+}
+
+.point-input-area input[type="number"] {
+    width: 80px;
+}
+
+.point-input-area input[type="text"] {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.add-point-button {
+    padding: 8px 15px;
+    background: #46b450;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.add-point-button:hover {
+    background: #389e44;
+}
+
+.scan-result-area {
+    margin-bottom: 20px;
+    min-height: 60px;
+}
+
+.message-box {
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.message-box.info {
+    background: #e5f5fa;
+    border-left: 4px solid #00a0d2;
+}
+
+.message-box.success {
+    background: #ecf7ed;
+    border-left: 4px solid #46b450;
+}
+
+.message-box.error {
+    background: #fbeaea;
+    border-left: 4px solid #dc3232;
+}
+
+/* スタンプ表示用のスタイル */
+.stamp-history {
+    margin-top: 20px;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 5px;
+}
+
+.stamp-legends {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.stamp-legend {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+}
+
+.stamp-legend img {
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+    .point-input-area {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .point-input-area input[type="text"] {
+        width: 100%;
+    }
+    
+    .add-point-button {
+        width: 100%;
+    }
+}
