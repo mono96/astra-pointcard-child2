@@ -4,35 +4,7 @@
  * 複数のプラグインコードを統合したバージョン
  */
 
-// ================================================================
-// ポイントカードシステム設定
-// ================================================================
-
-// 画像パスの基本設定
-$POINTCARD_IMAGES_BASE_URL = get_stylesheet_directory_uri() . '/assets/images';
-
-// 管理者ID別スタンプ画像のマッピング
-// 管理者のユーザーIDとスタンプ画像ファイル名のマッピングを定義
-// 変更する場合はここを編集してください
-$POINTCARD_ADMIN_STAMPS = array(
-    21 => 'nobuhito_stamp.png',  // nobuhito (ID:21)
-    16 => 'mono96_stamp.jpg',    // mono96 (ID:16)
-    19 => 'koume_stamp.png',     // koume18@hotmail.com (ID:19)
-);
-
-// デフォルトスタンプ画像のファイル名
-$POINTCARD_DEFAULT_STAMP_FILENAME = 'stamp.png';
-
-// ポイントカード設定
-$POINTCARD_SETTINGS = array(
-    'points_for_reward' => 10,       // 特典交換に必要なポイント数
-    'expiry_period' => 12,           // ポイント有効期限（月）
-    'notification_periods' => array(3, 6, 11) // 期限切れ通知を送るタイミング（月）
-);
-
-// ================================================================
 // 親テーマのスタイルシートを読み込む
-// ================================================================
 add_action('wp_enqueue_scripts', 'astra_child_enqueue_styles');
 function astra_child_enqueue_styles() {
     wp_enqueue_style('parent-style', get_template_directory_uri() . '/style.css');
@@ -145,38 +117,11 @@ function add_exchange_history_entry($post_id, $entry) {
     update_field('exchange_history_json', json_encode($history), $post_id);
 }
 
-/**
- * 管理者IDからスタンプ画像URLを取得する関数
- * グローバル変数を使用して設定を読み込む
- */
-function get_stamp_image_for_admin($admin_id) {
-    global $POINTCARD_ADMIN_STAMPS, $POINTCARD_IMAGES_BASE_URL, $POINTCARD_DEFAULT_STAMP_FILENAME;
-    
-    // 管理者IDは数値型であることを確認
-    $admin_id = intval($admin_id);
-    
-    // マッピングに存在する場合はファイル名からURLを構成して返す
-    if (isset($POINTCARD_ADMIN_STAMPS[$admin_id])) {
-        return $POINTCARD_IMAGES_BASE_URL . '/' . $POINTCARD_ADMIN_STAMPS[$admin_id];
-    }
-    
-    // ユーザーメタからスタンプ画像を取得（バックアップ手段）
-    $stamp_from_meta = get_user_meta($admin_id, 'stamp_image', true);
-    if (!empty($stamp_from_meta)) {
-        return $stamp_from_meta;
-    }
-    
-    // どちらの方法でも取得できない場合はデフォルトスタンプを返す
-    return $POINTCARD_IMAGES_BASE_URL . '/' . $POINTCARD_DEFAULT_STAMP_FILENAME;
-}
-
 // QRコード表示部分を生成する関数
 /**
  * 修正2: QRコード表示部分の改善 - よりシンプルなリンク形式に
  */
 function display_qr_code_section($user_id) {
-    global $POINTCARD_IMAGES_BASE_URL;
-    
     // ユーザー固有のトークンを取得
     $token = get_user_meta($user_id, 'qr_point_token', true);
     
@@ -244,11 +189,11 @@ function get_qrcode_javascript() {
 
 /**
  * 修正5: 管理者スタンプを表示する機能の改善
+ */
+/**
  * 変更2-1: スタンプ表示順を変更 - 最新のスタンプが後ろに表示されるように修正
  */
 function get_admin_stamps_for_user($post_id) {
-    global $POINTCARD_IMAGES_BASE_URL, $POINTCARD_DEFAULT_STAMP_FILENAME;
-    
     $stamps_data = array();
     
     // JSONからポイント履歴を取得
@@ -280,7 +225,7 @@ function get_admin_stamps_for_user($post_id) {
             }
             // 3. それでもなければデフォルトスタンプを使用
             else {
-                $stamp_url = $POINTCARD_IMAGES_BASE_URL . '/' . $POINTCARD_DEFAULT_STAMP_FILENAME;
+                $stamp_url = get_stylesheet_directory_uri() . '/assets/images/stamp.png';
             }
             
             // 各ポイントにスタンプ画像を割り当て
@@ -299,10 +244,10 @@ function get_admin_stamps_for_user($post_id) {
     return $stamps_data;
 }
 
+
+
 // ポイントカード表示ショートコード（交換履歴ベース版）
 function pointcard_display_shortcode() {
-    global $POINTCARD_IMAGES_BASE_URL, $POINTCARD_DEFAULT_STAMP_FILENAME;
-    
     if (!is_user_logged_in()) {
         return '<p>ポイントカードを表示するにはログインしてください。</p>';
     }
@@ -369,7 +314,7 @@ function pointcard_display_shortcode() {
                 // 10個のスタンプを表示
                 for ($j = 0; $j < 10; $j++) {
                     $output .= '<div class="stamp stamped">
-                        <img src="' . $POINTCARD_IMAGES_BASE_URL . '/' . $POINTCARD_DEFAULT_STAMP_FILENAME . '" alt="スタンプ">
+                        <img src="' . get_stylesheet_directory_uri() . '/assets/images/stamp.png" alt="スタンプ">
                     </div>';
                 }
                 
@@ -393,7 +338,7 @@ function pointcard_display_shortcode() {
         for ($i = 0; $i < 10; $i++) {
             if ($i < $current_points) {
                 // 管理者スタンプがあれば表示、なければデフォルト
-                $stamp_url = (isset($stamps_data[$i])) ? $stamps_data[$i] : $POINTCARD_IMAGES_BASE_URL . '/' . $POINTCARD_DEFAULT_STAMP_FILENAME;
+                $stamp_url = (isset($stamps_data[$i])) ? $stamps_data[$i] : get_stylesheet_directory_uri() . '/assets/images/stamp.png';
                 $output .= '<div class="stamp stamped">
                     <img src="' . esc_url($stamp_url) . '" alt="スタンプ">
                 </div>';
@@ -434,6 +379,7 @@ function pointcard_display_shortcode() {
     }
 }
 add_shortcode('pointcard', 'pointcard_display_shortcode');
+
 
 /**
  * 修正4: QRコードスキャナー部分の改善
@@ -478,236 +424,210 @@ function display_qr_scanner_section() {
     return $output;
 }
 
+
 // 管理者用ポイント管理ショートコード
 /**
  * 変更2-2: ポイント履歴表示に管理者IDを追加
  * 変更2-3: 過去のスタンプに管理者ごとのスタンプ画像を表示する
  */
-// 管理者用ポイント管理ショートコード
-/**
- * 変更2-2: ポイント履歴表示に管理者IDを追加
- * 変更2-3: 過去のスタンプに管理者ごとのスタンプ画像を表示する
- */
-// 管理者用ポイント管理ショートコード
 function pointcard_admin_shortcode() {
-    global $POINTCARD_IMAGES_BASE_URL, $POINTCARD_DEFAULT_STAMP_FILENAME;
-    
     if (!current_user_can('administrator')) {
         return '<p>管理者権限が必要です。</p>';
     }
     
-    // 出力バッファリングを開始
-    ob_start();
-    
     // QRコードスキャナー部分を追加
     $scanner_html = display_qr_scanner_section();
-    ?>
-    <script>
+    
+    // JavaScript を追加（確認ダイアログ用）
+    $output = '<script>
     function confirmExchange() {
         return confirm("特典を交換しますか？");
     }
-    </script>
+    </script>';
     
-    <div class="pointcard-admin">
+    $output .= '<div class="pointcard-admin">';
+    
+    // QRコードスキャナー部分を追加
+    $output .= $scanner_html;
+    
+    // ユーザー検索フォーム
+    $output .= '<div class="user-search">
+        <h2>ユーザー検索</h2>
+        <form method="get">
+            <input type="text" name="email_search" placeholder="メールアドレスで検索" value="' . (isset($_GET['email_search']) ? esc_attr($_GET['email_search']) : '') . '">
+            <button type="submit">検索</button>
+        </form>
+    </div>';
+    
+    // 検索結果表示
+    if (isset($_GET['email_search']) && !empty($_GET['email_search'])) {
+        $search_email = sanitize_email($_GET['email_search']);
         
-        <?php echo $scanner_html; ?>
-        
-        <div class="user-search">
-            <h2>ユーザー検索</h2>
-            <form method="get">
-                <input type="text" name="email_search" placeholder="メールアドレスで検索" value="<?php echo isset($_GET['email_search']) ? esc_attr($_GET['email_search']) : ''; ?>">
-                <button type="submit">検索</button>
-            </form>
-        </div>
-        
-        <?php
-        // 検索結果表示
-        if (isset($_GET['email_search']) && !empty($_GET['email_search'])) {
-            $search_email = sanitize_email($_GET['email_search']);
-            
-            $args = array(
-                'post_type' => 'pointcard',
-                'posts_per_page' => -1,
-                'meta_query' => array(
-                    array(
-                        'key' => 'email',
-                        'value' => $search_email,
-                        'compare' => 'LIKE'
-                    )
+        $args = array(
+            'post_type' => 'pointcard',
+            'posts_per_page' => -1,
+            'meta_query' => array(
+                array(
+                    'key' => 'email',
+                    'value' => $search_email,
+                    'compare' => 'LIKE'
                 )
-            );
+            )
+        );
+        
+        $query = new WP_Query($args);
+        
+        if ($query->have_posts()) {
+            $output .= '<div class="search-results">';
             
-            $query = new WP_Query($args);
-            
-            if ($query->have_posts()) {
-                ?>
-                <div class="search-results">
-                <?php
-                while ($query->have_posts()) {
-                    $query->the_post();
-                    $post_id = get_the_ID();
-                    $email = get_field('email', $post_id);
-                    $points = get_field('points', $post_id);
-                    $last_used_date = get_field('last_used_date', $post_id);
-                    
-                    // 交換履歴を取得して特典交換済み回数を計算
-                    $exchange_history = get_exchange_history($post_id);
-                    $exchanged_count = count($exchange_history);
-                    
-                    // 現在の有効ポイント（交換済み分を除く）
-                    $available_points = $points - ($exchanged_count * 10);
-                    ?>
-                    
-                    <div class="user-card">
-                        <h3><?php echo $email; ?> のポイントカード</h3>
-                        <div class="user-info">
-                            <p>累計ポイント: <?php echo $points; ?> ポイント</p>
-                            <p>使用可能ポイント: <?php echo $available_points; ?> ポイント</p>
-                            <p>交換済回数: <?php echo $exchanged_count; ?> 回</p>
-                            <p>最終利用日: <?php echo date('Y年m月d日', strtotime($last_used_date)); ?></p>
-                        </div>
-                        
-                        <div class="point-actions">
-                            <form method="post" class="add-point-form">
-                                <?php wp_nonce_field('add_point_action', 'add_point_nonce'); ?>
-                                <input type="hidden" name="action" value="add_point">
-                                <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
-                                <input type="hidden" name="email" value="<?php echo $email; ?>">
-                                <input type="number" name="points" value="1" min="1" max="10">
-                                <input type="text" name="memo" placeholder="メモ">
-                                <button type="submit">ポイント追加</button>
-                            </form>
-                            
-                            <form method="post" class="exchange-point-form" onsubmit="return confirmExchange()">
-                                <?php wp_nonce_field('exchange_reward_action', 'exchange_reward_nonce'); ?>
-                                <input type="hidden" name="action" value="exchange_reward">
-                                <input type="hidden" name="post_id" value="<?php echo $post_id; ?>">
-                                <input type="hidden" name="email" value="<?php echo $email; ?>">
-                                <button type="<?php echo ($available_points < 10 ? 'button' : 'submit'); ?>" 
-                                        class="<?php echo ($available_points < 10 ? 'disabled-button' : ''); ?>"
-                                        <?php if ($available_points < 10) : ?>
-                                        onclick="alert('特典交換に必要なポイントが不足しています。10ポイント必要です。現在のポイント: <?php echo $available_points; ?>ポイント');"
-                                        <?php endif; ?>>
-                                    特典交換実行
-                                </button>
-                            </form>
-                        </div>
-                        
-                        <div class="point-history">
-                            <h4>ポイント履歴</h4>
-                            
-                            <?php
-                            // ポイント履歴表示（JSON形式から取得）- 全件表示するように変更
-                            $point_history = get_point_history($post_id);
-                            if (!empty($point_history)) {
-                                ?>
-                                <table class="history-table">
-                                    <tr>
-                                        <th>日付</th>
-                                        <th>ポイント</th>
-                                        <th>メモ</th>
-                                        <th>管理者</th>
-                                        <th>管理者ID</th>
-                                        <th>スタンプ</th>
-                                    </tr>
-                                    
-                                    <?php
-                                    // 表示件数制限なし - 全件表示
-                                    foreach ($point_history as $entry) {
-                                        // 管理者情報を取得
-                                        $admin_info = '';
-                                        $admin_id = isset($entry['admin_id']) ? $entry['admin_id'] : '';
-                                        if (!empty($admin_id)) {
-                                            $admin_user = get_userdata($admin_id);
-                                            $admin_info = $admin_user ? $admin_user->display_name : '不明';
-                                        }
-                                        
-                                        // スタンプ画像の取得 - 管理者ごとのスタンプ画像を表示
-                                        $stamp_url = '';
-                                        if (isset($entry['stamp_url']) && !empty($entry['stamp_url'])) {
-                                            $stamp_url = $entry['stamp_url'];
-                                        } elseif (!empty($admin_id)) {
-                                            $stamp_url = get_stamp_image_for_admin($admin_id);
-                                        } else {
-                                            $stamp_url = $POINTCARD_IMAGES_BASE_URL . '/' . $POINTCARD_DEFAULT_STAMP_FILENAME;
-                                        }
-                                        
-                                        // 日本時間（JST）で表示
-                                        $jst_time = new DateTime($entry['date']);
-                                        $jst_time->setTimezone(new DateTimeZone('Asia/Tokyo'));
-                                        ?>
-                                        
-                                        <tr>
-                                            <td><?php echo $jst_time->format('Y/m/d H:i'); ?></td>
-                                            <td><?php echo $entry['points']; ?></td>
-                                            <td><?php echo esc_html(isset($entry['memo']) ? $entry['memo'] : ''); ?></td>
-                                            <td><?php echo $admin_info; ?></td>
-                                            <td><?php echo $admin_id; ?></td>
-                                            <td><img src="<?php echo esc_url($stamp_url); ?>" style="width: 40px; height: 40px;" alt="スタンプ"></td>
-                                        </tr>
-                                        
-                                    <?php } ?>
-                                </table>
-                            <?php } else { ?>
-                                <p>履歴はありません。</p>
-                            <?php } ?>
-                        </div>
-                        
-                        <div class="exchange-history">
-                            <h4>特典交換履歴</h4>
-                            
-                            <?php if (!empty($exchange_history)) { ?>
-                                <table class="history-table">
-                                    <tr>
-                                        <th>日付</th>
-                                        <th>交換ポイント</th>
-                                    </tr>
-                                    
-                                    <?php foreach ($exchange_history as $entry) {
-                                        // 交換履歴も日本時間で表示
-                                        $jst_time = new DateTime($entry['date']);
-                                        $jst_time->setTimezone(new DateTimeZone('Asia/Tokyo'));
-                                        ?>
-                                        
-                                        <tr>
-                                            <td><?php echo $jst_time->format('Y/m/d H:i'); ?></td>
-                                            <td><?php echo $entry['points']; ?></td>
-                                        </tr>
-                                    <?php } ?>
-                                </table>
-                            <?php } else { ?>
-                                <p>交換履歴はありません。</p>
-                            <?php } ?>
-                        </div>
+            while ($query->have_posts()) {
+                $query->the_post();
+                $post_id = get_the_ID();
+                $email = get_field('email', $post_id);
+                $points = get_field('points', $post_id);
+                $last_used_date = get_field('last_used_date', $post_id);
+                
+                // 交換履歴を取得して特典交換済み回数を計算
+                $exchange_history = get_exchange_history($post_id);
+                $exchanged_count = count($exchange_history);
+                
+                // 現在の有効ポイント（交換済み分を除く）
+                $available_points = $points - ($exchanged_count * 10);
+                
+                $output .= '<div class="user-card">
+                    <h3>' . $email . ' のポイントカード</h3>
+                    <div class="user-info">
+                        <p>累計ポイント: ' . $points . ' ポイント</p>
+                        <p>使用可能ポイント: ' . $available_points . ' ポイント</p>
+                        <p>交換済回数: ' . $exchanged_count . ' 回</p>
+                        <p>最終利用日: ' . date('Y年m月d日', strtotime($last_used_date)) . '</p>
                     </div>
                     
-                <?php } ?>
-                </div>
+                    <div class="point-actions">
+                        <form method="post" class="add-point-form">
+                            ' . wp_nonce_field('add_point_action', 'add_point_nonce', true, false) . '
+                            <input type="hidden" name="action" value="add_point">
+                            <input type="hidden" name="post_id" value="' . $post_id . '">
+                            <input type="hidden" name="email" value="' . $email . '">
+                            <input type="number" name="points" value="1" min="1" max="10">
+                            <input type="text" name="memo" placeholder="メモ">
+                            <button type="submit">ポイント追加</button>
+                        </form>
+                        
+                        <form method="post" class="exchange-point-form" onsubmit="return confirmExchange()">
+                            ' . wp_nonce_field('exchange_reward_action', 'exchange_reward_nonce', true, false) . '
+                            <input type="hidden" name="action" value="exchange_reward">
+                            <input type="hidden" name="post_id" value="' . $post_id . '">
+                            <input type="hidden" name="email" value="' . $email . '">
+                            <button type="' . ($available_points < 10 ? 'button' : 'submit') . '" 
+                                    class="' . ($available_points < 10 ? 'disabled-button' : '') . '"
+                                    ' . ($available_points < 10 ? 'onclick="alert(\'特典交換に必要なポイントが不足しています。10ポイント必要です。現在のポイント: ' . $available_points . 'ポイント\');"' : '') . '>
+                                特典交換実行
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <div class="point-history">
+                        <h4>ポイント履歴</h4>';
                 
-                <?php
-                wp_reset_postdata();
-            } else {
-                ?>
-                <p>該当するユーザーが見つかりませんでした。</p>
-                <?php
+                // ポイント履歴表示（JSON形式から取得）- 全件表示するように変更
+                $point_history = get_point_history($post_id);
+                if (!empty($point_history)) {
+                    $output .= '<table class="history-table">
+                        <tr>
+                            <th>日付</th>
+                            <th>ポイント</th>
+                            <th>メモ</th>
+                            <th>管理者</th>
+                            <th>管理者ID</th>
+                            <th>スタンプ</th>
+                        </tr>';
+                    
+                    // 表示件数制限なし - 全件表示
+                    foreach ($point_history as $entry) {
+                        // 管理者情報を取得
+                        $admin_info = '';
+                        $admin_id = isset($entry['admin_id']) ? $entry['admin_id'] : '';
+                        if (!empty($admin_id)) {
+                            $admin_user = get_userdata($admin_id);
+                            $admin_info = $admin_user ? $admin_user->display_name : '不明';
+                        }
+                        
+                        // スタンプ画像の取得 - 管理者ごとのスタンプ画像を表示
+                        $stamp_url = '';
+                        if (isset($entry['stamp_url']) && !empty($entry['stamp_url'])) {
+                            $stamp_url = $entry['stamp_url'];
+                        } elseif (!empty($admin_id)) {
+                            $stamp_url = get_stamp_image_for_admin($admin_id);
+                        } else {
+                            $stamp_url = get_stylesheet_directory_uri() . '/assets/images/stamp.png';
+                        }
+                        
+                        // 日本時間（JST）で表示
+                        $jst_time = new DateTime($entry['date']);
+                        $jst_time->setTimezone(new DateTimeZone('Asia/Tokyo'));
+                        
+                        $output .= '<tr>
+                            <td>' . $jst_time->format('Y/m/d H:i') . '</td>
+                            <td>' . $entry['points'] . '</td>
+                            <td>' . esc_html($entry['memo']) . '</td>
+                            <td>' . $admin_info . '</td>
+                            <td>' . $admin_id . '</td>
+                            <td><img src="' . esc_url($stamp_url) . '" style="width: 40px; height: 40px;" alt="スタンプ"></td>
+                        </tr>';
+                    }
+                    
+                    $output .= '</table>';
+                } else {
+                    $output .= '<p>履歴はありません。</p>';
+                }
+                
+                $output .= '</div>'; // .point-history閉じ
+                
+                // 特典交換履歴
+                $output .= '<div class="exchange-history">
+                    <h4>特典交換履歴</h4>';
+                
+                if (!empty($exchange_history)) {
+                    $output .= '<table class="history-table">
+                        <tr>
+                            <th>日付</th>
+                            <th>交換ポイント</th>
+                        </tr>';
+                    
+                    foreach ($exchange_history as $entry) {
+                        // 交換履歴も日本時間で表示
+                        $jst_time = new DateTime($entry['date']);
+                        $jst_time->setTimezone(new DateTimeZone('Asia/Tokyo'));
+                        
+                        $output .= '<tr>
+                            <td>' . $jst_time->format('Y/m/d H:i') . '</td>
+                            <td>' . $entry['points'] . '</td>
+                        </tr>';
+                    }
+                    
+                    $output .= '</table>';
+                } else {
+                    $output .= '<p>交換履歴はありません。</p>';
+                }
+                
+                $output .= '</div>'; // .exchange-history閉じ
+                $output .= '</div>'; // .user-card閉じ
             }
+            
+            $output .= '</div>'; // .search-results閉じ
+            
+            wp_reset_postdata();
+        } else {
+            $output .= '<p>該当するユーザーが見つかりませんでした。</p>';
         }
-        ?>
-        
-    </div>
-    <?php
+    }
     
-    // 出力バッファを取得して返す
-    $output = ob_get_clean();
+    $output .= '</div>'; // .pointcard-admin閉じ
+    
     return $output;
 }
 add_shortcode('pointcard_admin', 'pointcard_admin_shortcode');
-
-// シンプルなラッパーショートコード
-function pointcard_admin_wrapper_shortcode() {
-    return pointcard_admin_shortcode();
-}
-add_shortcode('pointcard_admin_wrapper', 'pointcard_admin_wrapper_shortcode');
 
 
 /**
@@ -751,6 +671,7 @@ function process_qr_token_redirect() {
     }
 }
 add_action('template_redirect', 'process_qr_token_redirect');
+
 
 // ポイント追加・特典交換処理
 /**
@@ -818,7 +739,7 @@ function process_pointcard_actions() {
         </script>';
         exit;
     }
-    
+        
     // 特典交換処理
     if (isset($_POST['action']) && $_POST['action'] == 'exchange_reward') {
         // CSRFチェック
@@ -878,6 +799,7 @@ function process_pointcard_actions() {
 }
 add_action('template_redirect', 'process_pointcard_actions');
 
+
 // 追加: メッセージ表示機能
 function pointcard_admin_messages() {
     if (isset($_GET['updated'])) {
@@ -933,10 +855,9 @@ function send_reward_exchange_notice($email, $points_used) {
 
 add_action('template_redirect', 'process_pointcard_actions');
 
+
 // 通知用のスケジュールイベントを登録
 function schedule_pointcard_notifications() {
-    global $POINTCARD_SETTINGS;
-    
     if (!wp_next_scheduled('check_pointcard_expirations')) {
         wp_schedule_event(time(), 'daily', 'check_pointcard_expirations');
     }
@@ -945,13 +866,6 @@ add_action('wp', 'schedule_pointcard_notifications');
 
 // 期限切れ確認とメール通知
 function check_pointcard_expirations() {
-    global $POINTCARD_SETTINGS;
-    
-    // 設定から通知期間を取得、または デフォルト値を使用
-    $notification_periods = isset($POINTCARD_SETTINGS['notification_periods']) 
-                          ? $POINTCARD_SETTINGS['notification_periods'] 
-                          : array(3, 6, 11);
-    
     $args = array(
         'post_type' => 'pointcard',
         'posts_per_page' => -1,
@@ -969,12 +883,22 @@ function check_pointcard_expirations() {
             $last_used_timestamp = strtotime($last_used_date);
             $today = time();
             
-            // 設定された通知期間に基づいて通知
-            foreach ($notification_periods as $months) {
-                $months_timestamp = strtotime('+' . $months . ' months', $last_used_timestamp);
-                if ($months_timestamp <= $today && $months_timestamp > $today - 86400) { // 1日以内に指定月数が経過
-                    send_expiration_notice($email, $months, $last_used_date);
-                }
+            // 3ヶ月経過チェック
+            $three_months = strtotime('+3 months', $last_used_timestamp);
+            if ($three_months <= $today && $three_months > $today - 86400) { // 1日以内に3ヶ月が経過
+                send_expiration_notice($email, 3, $last_used_date);
+            }
+            
+            // 6ヶ月経過チェック
+            $six_months = strtotime('+6 months', $last_used_timestamp);
+            if ($six_months <= $today && $six_months > $today - 86400) { // 1日以内に6ヶ月が経過
+                send_expiration_notice($email, 6, $last_used_date);
+            }
+            
+            // 11ヶ月経過チェック (期限切れ1ヶ月前)
+            $eleven_months = strtotime('+11 months', $last_used_timestamp);
+            if ($eleven_months <= $today && $eleven_months > $today - 86400) { // 1日以内に11ヶ月が経過
+                send_expiration_notice($email, 11, $last_used_date);
             }
         }
     }
@@ -985,18 +909,11 @@ add_action('check_pointcard_expirations', 'check_pointcard_expirations');
 
 // 期限切れ通知メール送信
 function send_expiration_notice($email, $months, $last_used_date) {
-    global $POINTCARD_SETTINGS;
-    
-    // 設定から有効期限を取得、または デフォルト値を使用
-    $expiry_period = isset($POINTCARD_SETTINGS['expiry_period']) 
-                   ? $POINTCARD_SETTINGS['expiry_period'] 
-                   : 12;
-    
     $subject = '';
     $message = '';
     
     $site_name = get_bloginfo('name');
-    $expiry_date = date('Y年m月d日', strtotime('+' . $expiry_period . ' months', strtotime($last_used_date)));
+    $expiry_date = date('Y年m月d日', strtotime('+1 year', strtotime($last_used_date)));
     
     switch ($months) {
         case 3:
@@ -1011,10 +928,6 @@ function send_expiration_notice($email, $months, $last_used_date) {
             $subject = '【' . $site_name . '】ポイントカード有効期限間近のお知らせ';
             $message = 'ポイントカードの有効期限が1ヶ月後に迫っています。';
             break;
-        default:
-            $subject = '【' . $site_name . '】ポイントカード' . $months . 'ヶ月経過のお知らせ';
-            $message = 'ポイントカードの最終利用から' . $months . 'ヶ月が経過しています。';
-            break;
     }
     
     $message .= "\n\n最終利用日: " . date('Y年m月d日', strtotime($last_used_date)) . 
@@ -1025,6 +938,8 @@ function send_expiration_notice($email, $months, $last_used_date) {
     
     wp_mail($email, $subject, $message);
 }
+
+
 
 // ログイン関連のカスタマイズ
 function custom_login_settings() {
@@ -1056,8 +971,6 @@ add_action('init', 'custom_login_settings');
 
 // カスタムスタイルシートの追加
 function add_pointcard_styles() {
-    global $POINTCARD_IMAGES_BASE_URL;
-    
     wp_enqueue_style('pointcard-style', get_stylesheet_directory_uri() . '/assets/css/pointcard.css');
     
     // インラインでCSSを追加
@@ -1085,6 +998,7 @@ function load_media_files() {
     wp_enqueue_media();
 }
 add_action('admin_enqueue_scripts', 'load_media_files');
+
 
 // 管理画面メニュー - 統合版
 function pointcard_admin_menu() {
@@ -1123,7 +1037,6 @@ add_action('admin_menu', 'pointcard_admin_menu');
 
 // 管理者スタンプ一覧ページのコンテンツ
 function manager_stamps_page_callback() {
-    global $POINTCARD_ADMIN_STAMPS, $POINTCARD_IMAGES_BASE_URL;
     ?>
     <div class="wrap">
         <h1>管理者スタンプ一覧</h1>
@@ -1141,7 +1054,7 @@ function manager_stamps_page_callback() {
                 $admin_users = get_users(array('role' => 'administrator'));
                 
                 foreach ($admin_users as $user) {
-                    $stamp_image = get_stamp_image_for_admin($user->ID);
+                    $stamp_image = get_user_meta($user->ID, 'stamp_image', true);
                     ?>
                     <tr>
                         <td><?php echo esc_html($user->display_name); ?></td>
@@ -1168,7 +1081,6 @@ function manager_stamps_page_callback() {
 
 // 設定ページのコンテンツ
 function pointcard_settings_page() {
-    global $POINTCARD_SETTINGS;
     ?>
     <div class="wrap">
         <h1>ポイントカード設定</h1>
@@ -1252,8 +1164,6 @@ function pointcard_display_stats() {
 
 // 設定オプションの登録
 function pointcard_register_settings() {
-    global $POINTCARD_SETTINGS;
-    
     register_setting('pointcard_options', 'pointcard_options');
     
     add_settings_section(
@@ -1288,10 +1198,8 @@ function pointcard_general_section_callback() {
 
 // 有効期限設定フィールド
 function pointcard_expiry_period_callback() {
-    global $POINTCARD_SETTINGS;
-    
     $options = get_option('pointcard_options');
-    $period = isset($options['expiry_period']) ? $options['expiry_period'] : $POINTCARD_SETTINGS['expiry_period'];
+    $period = isset($options['expiry_period']) ? $options['expiry_period'] : 12;
     ?>
     <input type="number" name="pointcard_options[expiry_period]" value="<?php echo $period; ?>" min="1" max="60">
     <p class="description">最終利用日からの有効期限（月数）</p>
@@ -1300,10 +1208,8 @@ function pointcard_expiry_period_callback() {
 
 // 特典交換ポイント設定フィールド
 function pointcard_points_per_reward_callback() {
-    global $POINTCARD_SETTINGS;
-    
     $options = get_option('pointcard_options');
-    $points = isset($options['points_per_reward']) ? $options['points_per_reward'] : $POINTCARD_SETTINGS['points_for_reward'];
+    $points = isset($options['points_per_reward']) ? $options['points_per_reward'] : 10;
     ?>
     <input type="number" name="pointcard_options[points_per_reward]" value="<?php echo $points; ?>" min="1" max="100">
     <p class="description">特典と交換するために必要なポイント数</p>
@@ -1447,6 +1353,45 @@ function save_stamp_image_field($user_id) {
 add_action('personal_options_update', 'save_stamp_image_field');
 add_action('edit_user_profile_update', 'save_stamp_image_field');
 
+/**
+ * 管理者IDからスタンプ画像URLを取得する関数
+ */
+/**
+ * 修正1: 管理者IDとスタンプ画像のマッピングを修正
+ * 各管理者の実際のユーザーIDとスタンプ画像を正確に紐づけます
+ */
+function get_stamp_image_for_admin($admin_id) {
+    // 管理者IDは数値型であることを確認
+    $admin_id = intval($admin_id);
+    
+    // 管理者IDとスタンプ画像の正確なマッピング
+    $admin_stamps = array(
+        21 => 'https://pt.amid.co.jp/wp-content/uploads/2025/03/f0a3b54d237599edfec95740b1a31f41.png', // nobuhito (ID:21)
+        16 => 'https://pt.amid.co.jp/wp-content/uploads/2025/03/att.H9CWT_BmSMUWlrHKr36pctINbRHGE_I5Dvjg2HRmUrU.jpg', // mono96 (ID:16)
+        19 => 'https://pt.amid.co.jp/wp-content/uploads/2025/03/koume.png', // koume18@hotmail.com (ID:19)
+    );
+    
+    // マッピングに存在する場合はそのURLを返す
+    if (isset($admin_stamps[$admin_id])) {
+        return $admin_stamps[$admin_id];
+    }
+    
+    // ユーザーメタからスタンプ画像を取得（バックアップ手段）
+    $stamp_from_meta = get_user_meta($admin_id, 'stamp_image', true);
+    if (!empty($stamp_from_meta)) {
+        return $stamp_from_meta;
+    }
+    
+    // どちらの方法でも取得できない場合はデフォルトスタンプを返す
+    return get_stylesheet_directory_uri() . '/assets/images/stamp.png';
+}
+
+
+
+/**
+ * ポイントカードCSV出力機能
+ * 管理画面からポイントカード情報をCSVでエクスポート
+ */
 /**
  * ポイントカードCSV出力機能
  * 管理画面からポイントカード情報をCSVでエクスポート
@@ -1713,10 +1658,10 @@ function export_pointcard_csv($period = 'all', $include_history = true) {
     exit;
 }
 
+
+
 // 特定の期間内のポイント集計データを取得するショートコード
 function pointcard_stats_shortcode($atts) {
-    global $POINTCARD_SETTINGS;
-    
     // 属性のデフォルト値を設定
     $atts = shortcode_atts(array(
         'period' => 'all', // all, today, yesterday, last7days, last30days, thismonth, lastmonth
@@ -1988,14 +1933,10 @@ add_shortcode('simple_user_add', 'simple_user_add_shortcode');
 
 
 
-
-
 /**
  * 修正6: デバッグ情報の拡張 - 開発中のみ有効にすることを推奨
  */
 function debug_pointcard_admin_info() {
-    global $POINTCARD_ADMIN_STAMPS, $POINTCARD_IMAGES_BASE_URL, $POINTCARD_DEFAULT_STAMP_FILENAME;
-    
     if (!current_user_can('administrator')) {
         return;
     }
@@ -2024,84 +1965,8 @@ function debug_pointcard_admin_info() {
     }
     echo '</ul>';
     
-    // 設定情報の表示
-    echo '<h4>ポイントカード設定</h4>';
-    echo '<p>画像ベースURL: ' . $POINTCARD_IMAGES_BASE_URL . '</p>';
-    echo '<p>デフォルトスタンプ: ' . $POINTCARD_DEFAULT_STAMP_FILENAME . '</p>';
-    echo '<p>管理者スタンプマッピング:</p>';
-    echo '<pre>' . print_r($POINTCARD_ADMIN_STAMPS, true) . '</pre>';
-    
     echo '</div>';
 }
-
-
-// Advanced Custom Fields のフィールド自動作成
-function register_pointcard_acf_fields() {
-    if (function_exists('acf_add_local_field_group')) {
-        acf_add_local_field_group(array(
-            'key' => 'group_pointcard',
-            'title' => 'ポイントカード情報',
-            'fields' => array(
-                array(
-                    'key' => 'field_user_id',
-                    'label' => 'ユーザーID',
-                    'name' => 'user_id',
-                    'type' => 'number',
-                    'required' => 1,
-                ),
-                array(
-                    'key' => 'field_email',
-                    'label' => 'メールアドレス',
-                    'name' => 'email',
-                    'type' => 'email',
-                    'required' => 1,
-                ),
-                array(
-                    'key' => 'field_points',
-                    'label' => 'ポイント数',
-                    'name' => 'points',
-                    'type' => 'number',
-                    'required' => 1,
-                    'default_value' => 0,
-                ),
-                array(
-                    'key' => 'field_last_used_date',
-                    'label' => '最終利用日',
-                    'name' => 'last_used_date',
-                    'type' => 'date_time_picker',
-                    'required' => 1,
-                    'display_format' => 'Y年m月d日 H:i',
-                    'return_format' => 'Y-m-d H:i:s',
-                ),
-                array(
-                    'key' => 'field_point_history_json',
-                    'label' => 'ポイント履歴(JSON)',
-                    'name' => 'point_history_json',
-                    'type' => 'textarea',
-                    'default_value' => '[]',
-                ),
-                array(
-                    'key' => 'field_exchange_history_json',
-                    'label' => '交換履歴(JSON)',
-                    'name' => 'exchange_history_json',
-                    'type' => 'textarea',
-                    'default_value' => '[]',
-                ),
-            ),
-            'location' => array(
-                array(
-                    array(
-                        'param' => 'post_type',
-                        'operator' => '==',
-                        'value' => 'pointcard',
-                    ),
-                ),
-            ),
-        ));
-    }
-}
-add_action('acf/init', 'register_pointcard_acf_fields');
-
 
 
 // 管理者ページにデバッグ情報を表示
